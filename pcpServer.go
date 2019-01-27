@@ -3,6 +3,7 @@ package gopcp
 import (
 	"encoding/json"
 	"reflect"
+	"errors"
 )
 
 // FunNode function node
@@ -15,13 +16,13 @@ type FunNode struct {
 // grammer based on json
 // ["fun1", 1, 2, ["fun2", 3]] => fun1(1, 2, fun2(3))
 type PcpServer struct {
-	sandbox Sandbox
+	sandbox *Sandbox
 }
 
 func parseJSON(source string) (*FunNode, error) {
 	arr := []interface{}{}
-	if err := json.Unmarshal([]byte{source}, &arr); err != nil {
-		return err
+	if err := json.Unmarshal([]byte(source), &arr); err != nil {
+		return nil, err
 	}
 	return parseAst(arr)
 }
@@ -30,24 +31,27 @@ func parseJSON(source string) (*FunNode, error) {
 func (pcpServer *PcpServer) Execute(source string) (interface{}, error) {
 	node, err := parseJSON(source)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	return pcpServer.executeAst(node)
 }
 
-func (pcpServer *PcpServer) executeAst(node *FunNode) (interface{}, error) {
+func (p *PcpServer) executeAst(node *FunNode) (interface{}, error) {
 	if node != nil {
-		fn := pcpServer.sandbox.get(node.funName)
-		funcType := fn.funType
-		fun := fn.fun
+		fn,err := p.sandbox.Get(node.funName)
+		funcType := fn.FunType
+		fun := fn.Fun
 		params := []interface{}{}
 		if funcType == SandboxTypeNormal {
-			for field := range node.params {
+			for _, field := range node.params {
 				var res interface{}
 				switch field.(type) {
 				case FunNode:
 					funcNode := field.(FunNode)
-					res = executeAst(funcNode)
+					res, err = p.executeAst(&funcNode)
+					if err != nil {
+					   return nil, err
+					}
 				default:
 					res = field
 				}
@@ -59,6 +63,7 @@ func (pcpServer *PcpServer) executeAst(node *FunNode) (interface{}, error) {
 			return nil, nil
 		}
 	}
+	return nil, nil
 }
 
 func parseAst(arr []interface{}) (node *FunNode, err error) {
@@ -66,28 +71,33 @@ func parseAst(arr []interface{}) (node *FunNode, err error) {
 		return
 	}
 	funName := arr[0]
-	if reflect.TypeOf(funcName).Kind() != reflect.String {
-		err = error.New("first element in array must be string")
+	if reflect.TypeOf(funName).Kind() != reflect.String {
+		err = errors.New("first element in array must be string")
 		return
 	}
-	curNode := &FunNode{funName: funName, params: []interface{}{}}
-	for i, v := range arr[1:] {
+	curNode := &FunNode{funName: funName.(string), params: []interface{}{}}
+	for _, v := range arr[1:] {
 		val := reflect.ValueOf(v)
 		if val.Kind() == reflect.Array {
-			var newArr []interface{}
-			copy(newArr[:], val)
-			newNode, err := parseAst(newArr)
+			ret := make([]interface{}, val.Len())
+      for i:=0; i<val.Len(); i++ {
+          ret[i] = val.Index(i).Interface()
+      }
+			newNode, err := parseAst(ret)
+			if err != nil {
+				return nil, err
+		  }
 			curNode.params = append(curNode.params, newNode)
 		} else {
-			curNode.params = append(curNode.params, val)
+			curNode.params = append(curNode.params, v)
 		}
 	}
-	return
+	return curNode, nil
 }
 
 // NewPcpServer merge sandbox with default sandbox
 func NewPcpServer(sandbox *Sandbox) *PcpServer {
-	box := NewSandbox(defBox)
-	defSandBox.Extend(sandbox)
+	box := defBox
+	box.Extend(sandbox)
 	return &PcpServer{box}
 }

@@ -1,55 +1,55 @@
 package gopcp
 
-import "fmt"
+import (
+  "fmt"
+	"errors"
+)
 
-type GeneralFun = func([]interface{}, PcpServer) interface{}
+type GeneralFun = func(...interface{}) (interface{}, error)
 
 // SandBoxType
 const (
-	SandboxTypeNormal = "normal_sandbox_type"
-	SandboxTypeLazy   = "lazy_sandbox_type"
+	SandboxTypeNormal = 1
+	SandboxTypeLazy   = 2
 )
 
 // BoxFun
-type BoxFun struct {
-	funType string // SandBoxType
-	fun     GeneralFun
+type BoxFunc struct {
+	FunType int // SandBoxType
+	Fun     GeneralFun
 }
 
 // Sandbox
 type Sandbox struct {
-	funcMap map[string]BoxFunc
+	funcMap map[string] *BoxFunc // name -> boxFunc
 }
 
-func NewSandbox(val *map[string]BoxFunc) {
-	sandbox := &SandBox{}
-	if val != nil {
-		sandbox.funcMap = *val
-	} else {
-		sandbox.funcMap = map[string]BoxFunc{}
-	}
+func NewSandbox(val map[string]*BoxFunc) *Sandbox {
+	sandbox := &Sandbox{}
+  sandbox.funcMap = val
 	return sandbox
 }
 
 // Get get sandbox method
-func (sandBox *SandBox) Get(name string) (*BoxFunc, error) {
-	if val, ok := sandBox.funcMap[name]; ok {
-		return &val, nil
+func (s *Sandbox) Get(name string) (*BoxFunc, error) {
+	if val, ok := s.funcMap[name]; ok {
+		return val, nil
 	}
-	return nil, error.New(fmt.Sprintf("function [%s] doesn't exist in sandBox", name))
+	return nil, errors.New(fmt.Sprintf("function [%s] doesn't exist in sandBox", name))
 }
 
 // Set set sandbox method
-func (sandBox *SandBox) Set(name string, val BoxFunc) {
-	sandBox.funcMap[name] = val
+func (s *Sandbox) Set(name string, val *BoxFunc) {
+	s.funcMap[name] = val
+	return
 }
 
 // Extend merge newSandBox's value to origin sandBox
-func (sandBox *SandBox) Extend(newSandBox *SandBox) {
+func (s *Sandbox) Extend(newSandBox *Sandbox) {
 	if newSandBox == nil {
 		return
 	}
 	for k, v := range newSandBox.funcMap {
-		sandBox.Set(k, v)
+		s.Set(k, v)
 	}
 }
