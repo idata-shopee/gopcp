@@ -2,8 +2,8 @@ package gopcp
 
 import (
 	"encoding/json"
-	"reflect"
 	"errors"
+	"reflect"
 )
 
 // FunNode function node
@@ -38,7 +38,7 @@ func (pcpServer *PcpServer) Execute(source string) (interface{}, error) {
 
 func (p *PcpServer) executeAst(node *FunNode) (interface{}, error) {
 	if node != nil {
-		fn,err := p.sandbox.Get(node.funName)
+		fn, err := p.sandbox.Get(node.funName)
 		funcType := fn.FunType
 		fun := fn.Fun
 		params := []interface{}{}
@@ -50,7 +50,7 @@ func (p *PcpServer) executeAst(node *FunNode) (interface{}, error) {
 					funcNode := field.(FunNode)
 					res, err = p.executeAst(&funcNode)
 					if err != nil {
-					   return nil, err
+						return nil, err
 					}
 				default:
 					res = field
@@ -80,13 +80,13 @@ func parseAst(arr []interface{}) (node *FunNode, err error) {
 		val := reflect.ValueOf(v)
 		if val.Kind() == reflect.Array {
 			ret := make([]interface{}, val.Len())
-      for i:=0; i<val.Len(); i++ {
-          ret[i] = val.Index(i).Interface()
-      }
+			for i := 0; i < val.Len(); i++ {
+				ret[i] = val.Index(i).Interface()
+			}
 			newNode, err := parseAst(ret)
 			if err != nil {
 				return nil, err
-		  }
+			}
 			curNode.params = append(curNode.params, newNode)
 		} else {
 			curNode.params = append(curNode.params, v)

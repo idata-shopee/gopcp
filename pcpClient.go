@@ -13,7 +13,7 @@ func (c *PcpClient) Call(funName string, params []interface{}) (interface{}, err
 func (c *PcpClient) ToJSON(res interface{}) (str string, err error) {
 	bytes, err := json.Marshal(res)
 	if err != nil {
-		return 
+		return
 	}
 	str = string(bytes[:])
 	return

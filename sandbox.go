@@ -1,8 +1,8 @@
 package gopcp
 
 import (
-  "fmt"
 	"errors"
+	"fmt"
 )
 
 type GeneralFun = func(...interface{}) (interface{}, error)
@@ -21,12 +21,12 @@ type BoxFunc struct {
 
 // Sandbox
 type Sandbox struct {
-	funcMap map[string] *BoxFunc // name -> boxFunc
+	funcMap map[string]*BoxFunc // name -> boxFunc
 }
 
 func NewSandbox(val map[string]*BoxFunc) *Sandbox {
 	sandbox := &Sandbox{}
-  sandbox.funcMap = val
+	sandbox.funcMap = val
 	return sandbox
 }
 
