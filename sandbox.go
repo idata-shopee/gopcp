@@ -53,3 +53,11 @@ func (s *Sandbox) Extend(newSandBox *Sandbox) {
 		s.Set(k, v)
 	}
 }
+
+func ToSandboxFun(fun GeneralFun) *BoxFunc {
+	return &BoxFunc{SandboxTypeNormal, fun}
+}
+
+func ToLazySandboxFun(fun GeneralFun) *BoxFunc {
+	return &BoxFunc{SandboxTypeLazy, fun}
+}

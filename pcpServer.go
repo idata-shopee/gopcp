@@ -2,8 +2,6 @@ package gopcp
 
 import (
 	"encoding/json"
-	"errors"
-	"reflect"
 )
 
 // FunNode function node
@@ -19,80 +17,80 @@ type PcpServer struct {
 	sandbox *Sandbox
 }
 
-func parseJSON(source string) (*FunNode, error) {
-	arr := []interface{}{}
+func parseJSON(source string) (interface{}, error) {
+	var arr interface{}
 	if err := json.Unmarshal([]byte(source), &arr); err != nil {
 		return nil, err
 	}
-	return parseAst(arr)
+	return parseAst(arr), nil
 }
 
 // Execute ....
 func (pcpServer *PcpServer) Execute(source string) (interface{}, error) {
-	node, err := parseJSON(source)
+	ast, err := parseJSON(source)
 	if err != nil {
 		return nil, err
 	}
-	return pcpServer.executeAst(node)
+	return pcpServer.executeAst(ast)
 }
 
-func (p *PcpServer) executeAst(node *FunNode) (interface{}, error) {
-	if node != nil {
-		fn, err := p.sandbox.Get(node.funName)
-		funcType := fn.FunType
-		fun := fn.Fun
-		params := []interface{}{}
-		if funcType == SandboxTypeNormal {
-			for _, field := range node.params {
-				var res interface{}
-				switch field.(type) {
-				case FunNode:
-					funcNode := field.(FunNode)
-					res, err = p.executeAst(&funcNode)
-					if err != nil {
-						return nil, err
-					}
-				default:
-					res = field
+func (p *PcpServer) executeAst(ast interface{}) (interface{}, error) {
+	switch funNode := ast.(type) {
+	case FunNode:
+		sandboxFun, err := p.sandbox.Get(funNode.funName)
+		if err != nil {
+			return nil, err
+		}
+
+		if sandboxFun.FunType == SandboxTypeNormal {
+			// for normal mode, resolve params first
+			var paramRets []interface{}
+			for _, param := range funNode.params {
+				paramRet, paramErr := p.executeAst(param)
+				if paramErr != nil {
+					return nil, paramErr
 				}
-				params = append(params, res)
+				paramRets = append(paramRets, paramRet)
 			}
-			res, err := fun(params, p)
-			return res, err
-		} else if funcType == SandboxTypeLazy {
-			return nil, nil
+
+			return sandboxFun.Fun(paramRets, p)
+		} else if sandboxFun.FunType == SandboxTypeLazy {
+			// execute lazy sandbox function
+			return sandboxFun.Fun(funNode.params, p)
 		}
+
+	default:
+		return ast, nil
 	}
-	return nil, nil
+	return nil, nil // impossible for this line
 }
 
-func parseAst(arr []interface{}) (node *FunNode, err error) {
-	if len(arr) == 0 {
-		return
-	}
-	funName := arr[0]
-	if reflect.TypeOf(funName).Kind() != reflect.String {
-		err = errors.New("first element in array must be string")
-		return
-	}
-	curNode := &FunNode{funName: funName.(string), params: []interface{}{}}
-	for _, v := range arr[1:] {
-		val := reflect.ValueOf(v)
-		if val.Kind() == reflect.Array {
-			ret := make([]interface{}, val.Len())
-			for i := 0; i < val.Len(); i++ {
-				ret[i] = val.Index(i).Interface()
-			}
-			newNode, err := parseAst(ret)
-			if err != nil {
-				return nil, err
-			}
-			curNode.params = append(curNode.params, newNode)
-		} else {
-			curNode.params = append(curNode.params, v)
+func parseAst(source interface{}) interface{} {
+	switch arr := source.(type) {
+	case []interface{}:
+		if len(arr) == 0 {
+			return arr
 		}
+
+		switch head := arr[0].(type) {
+		case string:
+			if head == "'" {
+				return arr[:1]
+			} else {
+				var params []interface{}
+
+				for i := 1; i < len(head); i++ {
+					params = append(params, parseAst(arr[i]))
+				}
+
+				return FunNode{head, params}
+			}
+		default:
+			return arr
+		}
+	default:
+		return arr
 	}
-	return curNode, nil
 }
 
 // NewPcpServer merge sandbox with default sandbox
