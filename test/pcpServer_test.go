@@ -9,7 +9,7 @@ import (
 func TestPcpServer(t *testing.T) {
 	addFunc := &gopcp.BoxFunc{
 		FunType: gopcp.SandboxTypeNormal,
-		Fun: func(args ...interface{}) (interface{}, error) {
+		Fun: func(args []interface{}, pcpServer *gopcp.PcpServer) (interface{}, error) {
 			var res float64
 			for _, arg := range args {
 				if val, ok := arg.(float64); !ok {

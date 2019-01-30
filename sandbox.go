@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-type GeneralFun = func(...interface{}) (interface{}, error)
+type GeneralFun = func([]interface{}, *PcpServer) (interface{}, error)
 
 // SandBoxType
 const (

@@ -57,7 +57,7 @@ func (p *PcpServer) executeAst(node *FunNode) (interface{}, error) {
 				}
 				params = append(params, res)
 			}
-			res, err := fun(params...)
+			res, err := fun(params, p)
 			return res, err
 		} else if funcType == SandboxTypeLazy {
 			return nil, nil
