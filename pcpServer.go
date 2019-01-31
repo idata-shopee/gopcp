@@ -31,10 +31,10 @@ func (pcpServer *PcpServer) Execute(source string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return pcpServer.executeAst(ast)
+	return pcpServer.ExecuteAst(ast)
 }
 
-func (p *PcpServer) executeAst(ast interface{}) (interface{}, error) {
+func (p *PcpServer) ExecuteAst(ast interface{}) (interface{}, error) {
 	switch funNode := ast.(type) {
 	case FunNode:
 		sandboxFun, err := p.sandbox.Get(funNode.funName)
@@ -46,7 +46,7 @@ func (p *PcpServer) executeAst(ast interface{}) (interface{}, error) {
 			// for normal mode, resolve params first
 			var paramRets []interface{}
 			for _, param := range funNode.params {
-				paramRet, paramErr := p.executeAst(param)
+				paramRet, paramErr := p.ExecuteAst(param)
 				if paramErr != nil {
 					return nil, paramErr
 				}
@@ -75,7 +75,7 @@ func parseAst(source interface{}) interface{} {
 		switch head := arr[0].(type) {
 		case string:
 			if head == "'" {
-				return arr[:1]
+				return arr[1:]
 			} else {
 				var params []interface{}
 

@@ -5,16 +5,34 @@ import "encoding/json"
 //PcpClient pcp client
 type PcpClient struct{}
 
-//Call call function in  pcp server
-func (c *PcpClient) Call(funName string, params []interface{}) (interface{}, error) {
-	return nil, nil
+type CallResult struct {
+	result interface{}
 }
 
-func (c *PcpClient) ToJSON(res interface{}) (str string, err error) {
-	bytes, err := json.Marshal(res)
-	if err != nil {
-		return
+//Call call function in  pcp server
+//
+func (c *PcpClient) Call(funName string, params ...interface{}) CallResult {
+	var args []interface{}
+
+	for _, param := range params {
+		switch item := param.(type) {
+		case CallResult:
+			args = append(args, item.result)
+		case []interface{}:
+			constParam := append(item, "'")
+			args = append(args, constParam)
+		default:
+			args = append(args, item)
+		}
 	}
-	str = string(bytes[:])
-	return
+
+	return CallResult{append([]interface{}{funName}, args...)}
+}
+
+func (c *PcpClient) ToJSON(callResult CallResult) (str string, err error) {
+	bytes, err := json.Marshal(callResult.result)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes[:]), nil
 }

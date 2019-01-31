@@ -2,6 +2,6 @@ GOPATH := $(shell cd ../../../.. && pwd)
 export GOPATH
 
 test:
-	@cd test && go test -cover
+	@go test -cover
 
 .PHONY:	test
