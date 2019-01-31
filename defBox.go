@@ -1,3 +1,3 @@
 package gopcp
 
-var defBox = NewSandbox(map[string]*BoxFunc{})
+var DefBox = &Sandbox{map[string]*BoxFunc{}}

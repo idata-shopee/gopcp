@@ -24,10 +24,8 @@ type Sandbox struct {
 	funcMap map[string]*BoxFunc // name -> boxFunc
 }
 
-func NewSandbox(val map[string]*BoxFunc) *Sandbox {
-	sandbox := &Sandbox{}
-	sandbox.funcMap = val
-	return sandbox
+func GetSandbox(box map[string]*BoxFunc) *Sandbox {
+	return (&Sandbox{box}).Extend(DefBox)
 }
 
 // Get get sandbox method
@@ -45,13 +43,11 @@ func (s *Sandbox) Set(name string, val *BoxFunc) {
 }
 
 // Extend merge newSandBox's value to origin sandBox
-func (s *Sandbox) Extend(newSandBox *Sandbox) {
-	if newSandBox == nil {
-		return
-	}
+func (s *Sandbox) Extend(newSandBox *Sandbox) *Sandbox {
 	for k, v := range newSandBox.funcMap {
 		s.Set(k, v)
 	}
+	return s
 }
 
 func ToSandboxFun(fun GeneralFun) *BoxFunc {

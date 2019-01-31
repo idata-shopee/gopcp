@@ -79,7 +79,7 @@ func parseAst(source interface{}) interface{} {
 			} else {
 				var params []interface{}
 
-				for i := 1; i < len(head); i++ {
+				for i := 1; i < len(arr); i++ {
 					params = append(params, parseAst(arr[i]))
 				}
 
@@ -95,7 +95,5 @@ func parseAst(source interface{}) interface{} {
 
 // NewPcpServer merge sandbox with default sandbox
 func NewPcpServer(sandbox *Sandbox) *PcpServer {
-	box := defBox
-	box.Extend(sandbox)
-	return &PcpServer{box}
+	return &PcpServer{sandbox}
 }
