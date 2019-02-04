@@ -26,15 +26,15 @@ func parseJSON(source string) (interface{}, error) {
 }
 
 // Execute ....
-func (pcpServer *PcpServer) Execute(source string) (interface{}, error) {
+func (pcpServer *PcpServer) Execute(source string, attachment interface{}) (interface{}, error) {
 	ast, err := parseJSON(source)
 	if err != nil {
 		return nil, err
 	}
-	return pcpServer.ExecuteAst(ast)
+	return pcpServer.ExecuteAst(ast, attachment)
 }
 
-func (p *PcpServer) ExecuteAst(ast interface{}) (interface{}, error) {
+func (p *PcpServer) ExecuteAst(ast interface{}, attachment interface{}) (interface{}, error) {
 	switch funNode := ast.(type) {
 	case FunNode:
 		sandboxFun, err := p.sandbox.Get(funNode.funName)
@@ -46,17 +46,17 @@ func (p *PcpServer) ExecuteAst(ast interface{}) (interface{}, error) {
 			// for normal mode, resolve params first
 			var paramRets []interface{}
 			for _, param := range funNode.params {
-				paramRet, paramErr := p.ExecuteAst(param)
+				paramRet, paramErr := p.ExecuteAst(param, attachment)
 				if paramErr != nil {
 					return nil, paramErr
 				}
 				paramRets = append(paramRets, paramRet)
 			}
 
-			return sandboxFun.Fun(paramRets, p)
+			return sandboxFun.Fun(paramRets, attachment, p)
 		} else if sandboxFun.FunType == SandboxTypeLazy {
 			// execute lazy sandbox function
-			return sandboxFun.Fun(funNode.params, p)
+			return sandboxFun.Fun(funNode.params, attachment, p)
 		}
 
 	default:

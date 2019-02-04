@@ -5,7 +5,7 @@ import (
 )
 
 var DefBox = &Sandbox{map[string]*BoxFunc{
-	"if": ToLazySandboxFun(func(args []interface{}, pcpServer *PcpServer) (interface{}, error) {
+	"if": ToLazySandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
 		if len(args) < 2 || len(args) > 3 {
 			return nil, errors.New("if grammer error. if must have at least 2 params, at most 3 params. eg: [\"if\", true, 1, 0], [\"if\", true, 1]")
 		}
@@ -18,15 +18,15 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 		}
 
 		// condition
-		conditionRet, cerr := pcpServer.ExecuteAst(conditionExp)
+		conditionRet, cerr := pcpServer.ExecuteAst(conditionExp, attachment)
 		if cerr != nil {
 			return nil, cerr
 		}
 
 		if conditionRet == false || conditionRet == 0.0 || conditionRet == nil {
-			return pcpServer.ExecuteAst(failExp)
+			return pcpServer.ExecuteAst(failExp, attachment)
 		} else {
-			return pcpServer.ExecuteAst(successExp)
+			return pcpServer.ExecuteAst(successExp, attachment)
 		}
 
 		return nil, nil

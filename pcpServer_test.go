@@ -18,7 +18,7 @@ func assertEqual(t *testing.T, expect interface{}, actual interface{}, message s
 
 func simpleSandbox() *Sandbox {
 	funcMap := map[string]*BoxFunc{
-		"add": ToSandboxFun(func(args []interface{}, pcpServer *PcpServer) (interface{}, error) {
+		"add": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
 			var res float64
 			for _, arg := range args {
 				if val, ok := arg.(float64); !ok {
@@ -29,7 +29,7 @@ func simpleSandbox() *Sandbox {
 			}
 			return res, nil
 		}),
-		"concat": ToSandboxFun(func(args []interface{}, pcpServer *PcpServer) (interface{}, error) {
+		"concat": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
 			res := ""
 			for _, arg := range args {
 				if val, ok := arg.(string); !ok {
@@ -40,12 +40,12 @@ func simpleSandbox() *Sandbox {
 			}
 			return res, nil
 		}),
-		">": ToSandboxFun(func(args []interface{}, pcpServer *PcpServer) (interface{}, error) {
+		">": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
 			a, _ := args[0].(float64)
 			b, _ := args[1].(float64)
 			return a > b, nil
 		}),
-		"sum": ToSandboxFun(func(args []interface{}, pcpServer *PcpServer) (interface{}, error) {
+		"sum": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
 			list, ok := args[0].([]interface{})
 			if !ok {
 				return nil, errors.New("args should be int list")
@@ -66,7 +66,7 @@ func simpleSandbox() *Sandbox {
 }
 
 func runPcpCall(t *testing.T, pcpServer *PcpServer, callText string, expect interface{}) {
-	res, err := pcpServer.Execute(callText)
+	res, err := pcpServer.Execute(callText, nil)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -76,7 +76,7 @@ func runPcpCall(t *testing.T, pcpServer *PcpServer, callText string, expect inte
 }
 
 func runPcpCallExpectError(t *testing.T, pcpServer *PcpServer, callText string) {
-	_, err := pcpServer.Execute(callText)
+	_, err := pcpServer.Execute(callText, nil)
 	if err == nil {
 		t.Errorf("expect error, but no error")
 	}
