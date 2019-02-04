@@ -17,20 +17,19 @@ type PcpServer struct {
 	sandbox *Sandbox
 }
 
-func parseJSON(source string) (interface{}, error) {
+// Execute ....
+func (pcpServer *PcpServer) Execute(source string, attachment interface{}) (interface{}, error) {
 	var arr interface{}
 	if err := json.Unmarshal([]byte(source), &arr); err != nil {
 		return nil, err
 	}
-	return parseAst(arr), nil
+
+	return pcpServer.ExecuteJsonObj(arr, attachment)
 }
 
-// Execute ....
-func (pcpServer *PcpServer) Execute(source string, attachment interface{}) (interface{}, error) {
-	ast, err := parseJSON(source)
-	if err != nil {
-		return nil, err
-	}
+// @param arr. Pure Json Object.
+func (pcpServer *PcpServer) ExecuteJsonObj(arr interface{}, attachment interface{}) (interface{}, error) {
+	ast := parseAst(arr)
 	return pcpServer.ExecuteAst(ast, attachment)
 }
 
