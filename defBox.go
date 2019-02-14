@@ -32,7 +32,28 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 		return nil, nil
 	}),
 
-	"list": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
+	// basic data structure: List
+	"List": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
 		return args, nil
+	}),
+
+	// basic data structure: Map[string]interface{}
+	"Map": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
+		l := len(args)
+		if l%2 == 1 {
+			return nil, errors.New("Map grammer error. eg: [\"Map\", \"age\", 3, \"weight\", 45]")
+		}
+
+		m := make(map[string]interface{})
+
+		for i := 0; i < l; i += 2 {
+			key, ok := args[i].(string)
+			if !ok {
+				return nil, errors.New("Map grammer error. eg: [\"Map\", \"age\", 3, \"weight\", 45]")
+			}
+			m[key] = args[i+1]
+		}
+
+		return m, nil
 	}),
 }}

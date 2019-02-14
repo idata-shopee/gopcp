@@ -1,6 +1,7 @@
 package gopcp
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
@@ -59,6 +60,13 @@ func simpleSandbox() *Sandbox {
 				v += itemValue
 			}
 			return v, nil
+		}),
+		"stringify": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
+			bytes, err := json.Marshal(args[0])
+			if err != nil {
+				return nil, err
+			}
+			return string(bytes), nil
 		}),
 	}
 	sandBox := GetSandbox(funcMap)
@@ -121,7 +129,20 @@ func TestIfSuccess(t *testing.T) {
 
 func TestListFunction(t *testing.T) {
 	pcpServer := NewPcpServer(simpleSandbox())
-	runPcpCall(t, pcpServer, "[\"sum\", [\"list\", [\"add\", 6, 4], 1, 2]]", 13.0)
+	runPcpCall(t, pcpServer, "[\"sum\", [\"List\", [\"add\", 6, 4], 1, 2]]", 13.0)
+}
+
+func TestMapFunction(t *testing.T) {
+	pcpServer := NewPcpServer(simpleSandbox())
+	runPcpCall(t, pcpServer, `["stringify", ["Map", "age", 3, "weight", 45]]`, `{"age":3,"weight":45}`)
+	runPcpCall(t, pcpServer, `["stringify", ["Map"]]`, `{}`)
+}
+
+func TestMapException(t *testing.T) {
+	pcpServer := NewPcpServer(simpleSandbox())
+	runPcpCallExpectError(t, pcpServer, `["stringify", ["Map", "age"]]`)
+	runPcpCallExpectError(t, pcpServer, `["stringify", ["Map", "age", 1, 2]]`)
+	runPcpCallExpectError(t, pcpServer, `["stringify", ["Map", 1, 2]]`)
 }
 
 func TestIfException(t *testing.T) {
