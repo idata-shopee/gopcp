@@ -119,6 +119,11 @@ func TestIfSuccess(t *testing.T) {
 	runPcpCall(t, pcpServer, "[\"if\", 1, 1, 2]", 1.0)
 }
 
+func TestListFunction(t *testing.T) {
+	pcpServer := NewPcpServer(simpleSandbox())
+	runPcpCall(t, pcpServer, "[\"sum\", [\"list\", [\"add\", 6, 4], 1, 2]]", 13.0)
+}
+
 func TestIfException(t *testing.T) {
 	pcpServer := NewPcpServer(simpleSandbox())
 	runPcpCallExpectError(t, pcpServer, "[\"if\", 2]")

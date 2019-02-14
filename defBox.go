@@ -30,4 +30,9 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 		}
 
 		return nil, nil
-	})}}
+	}),
+
+	"list": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
+		return args, nil
+	}),
+}}
