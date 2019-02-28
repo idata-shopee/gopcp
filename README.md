@@ -2,6 +2,8 @@
 
 A simple Lisp-Style protocol for communication (golang version)
 
+![travis-ci build status](https://travis-ci.com/idata-shopee/gopcp.svg?branch=master)
+
 ## Features
 
 - lisp style composation
