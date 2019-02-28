@@ -19,7 +19,7 @@ func (c *PcpClient) Call(funName string, params ...interface{}) CallResult {
 		case CallResult:
 			args = append(args, item.result)
 		case []interface{}:
-			constParam := append(item, "'")
+			constParam := append([]interface{}{"'"}, item...)
 			args = append(args, constParam)
 		default:
 			args = append(args, item)

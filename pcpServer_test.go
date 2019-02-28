@@ -102,6 +102,48 @@ func TestPcPClient(t *testing.T) {
 	assertEqual(t, callText, "[\"add\",1,2]", "")
 }
 
+func TestMarshal(t *testing.T) {
+	var pcpClient = PcpClient{}
+
+	var value = make(chan int)
+
+	_, err := pcpClient.ToJSON(pcpClient.Call("add", value))
+	if err == nil {
+		t.Errorf("expect error, but no error")
+	}
+}
+
+func TestUnmarshal(t *testing.T) {
+	pcpServer := NewPcpServer(simpleSandbox())
+	_, err := pcpServer.Execute("{{", nil)
+	if err == nil {
+		t.Errorf("expect error, but no error")
+	}
+}
+
+func TestPcpServerMissingArgs(t *testing.T) {
+	pcpServer := NewPcpServer(simpleSandbox())
+	ret, err := pcpServer.Execute("[]", nil)
+	if err != nil {
+		t.Errorf("errored")
+	}
+	ret2 := ret.([]interface{})
+	assertEqual(t, len(ret2), 0, "")
+}
+
+func TestCallWithArray(t *testing.T) {
+	pcpServer := NewPcpServer(simpleSandbox())
+	var pcpClient = PcpClient{}
+	callText, _ := pcpClient.ToJSON(pcpClient.Call("sum", []interface{}{1, 2}))
+	res, err := pcpServer.Execute(callText, nil)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if res != 3.0 {
+		t.Errorf("expect %v !=  actual %v", 3.0, res)
+	}
+}
+
 func TestPcPClientNest(t *testing.T) {
 	var pcpClient = PcpClient{}
 	callText, _ := pcpClient.ToJSON(pcpClient.Call("add", 1, pcpClient.Call("succ", 2)))
@@ -138,6 +180,11 @@ func TestMapFunction(t *testing.T) {
 	runPcpCall(t, pcpServer, `["stringify", ["Map"]]`, `{}`)
 }
 
+func TestPureData(t *testing.T) {
+	pcpServer := NewPcpServer(simpleSandbox())
+	runPcpCall(t, pcpServer, `["stringify", [1,2,3]]`, `[1,2,3]`)
+}
+
 func TestMapException(t *testing.T) {
 	pcpServer := NewPcpServer(simpleSandbox())
 	runPcpCallExpectError(t, pcpServer, `["stringify", ["Map", "age"]]`)
@@ -148,6 +195,17 @@ func TestMapException(t *testing.T) {
 func TestIfException(t *testing.T) {
 	pcpServer := NewPcpServer(simpleSandbox())
 	runPcpCallExpectError(t, pcpServer, "[\"if\", 2]")
+}
+
+func TestIfException2(t *testing.T) {
+	pcpServer := NewPcpServer(simpleSandbox())
+	runPcpCallExpectError(t, pcpServer, "[\"if\", [\"error\", \"exception!!!\"], 1, 2]")
+}
+
+func TestErrorException(t *testing.T) {
+	pcpServer := NewPcpServer(simpleSandbox())
+	runPcpCallExpectError(t, pcpServer, "[\"error\", 123]")
+	runPcpCallExpectError(t, pcpServer, "[\"error\"]")
 }
 
 func TestRawData(t *testing.T) {

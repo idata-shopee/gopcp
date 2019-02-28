@@ -57,11 +57,9 @@ func (p *PcpServer) ExecuteAst(ast interface{}, attachment interface{}) (interfa
 			// execute lazy sandbox function
 			return sandboxFun.Fun(funNode.params, attachment, p)
 		}
-
-	default:
-		return ast, nil
 	}
-	return nil, nil // impossible for this line
+
+	return ast, nil
 }
 
 func parseAst(source interface{}) interface{} {

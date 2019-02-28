@@ -28,8 +28,6 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 		} else {
 			return pcpServer.ExecuteAst(successExp, attachment)
 		}
-
-		return nil, nil
 	}),
 
 	// basic data structure: List
@@ -55,5 +53,18 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 		}
 
 		return m, nil
+	}),
+
+	"error": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
+		l := len(args)
+		if l%2 < 1 {
+			return nil, errors.New("Must specify error message. eg: [\"error\", \"Exception!\"]")
+		}
+
+		if msg, ok := args[0].(string); !ok {
+			return nil, errors.New("Must specify error message (string). eg: [\"error\", \"Exception!\"]")
+		} else {
+			return nil, errors.New(msg)
+		}
 	}),
 }}
