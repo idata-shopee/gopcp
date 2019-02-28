@@ -2,7 +2,7 @@ GOPATH := $(shell cd ../../../.. && pwd)
 export GOPATH
 
 test:
-	@go test
+	@go test -v -race
 
 cover:
 	@go test -coverprofile=coverage.out
