@@ -232,3 +232,8 @@ func TestDivideType(t *testing.T) {
 	runPcpCallExpectError(t, pcpServer, "[\"/\", 1, 0]")
 	runPcpCallExpectError(t, pcpServer, "[\"/\", 1, null]")
 }
+
+func TestPropFunction(t *testing.T) {
+	pcpServer := NewPcpServer(simpleSandbox())
+	runPcpCall(t, pcpServer, `["prop", {"a": 1.2}, "a"]`, 1.2)
+}

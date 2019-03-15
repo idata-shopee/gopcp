@@ -2,6 +2,7 @@ package gopcp
 
 import (
 	"errors"
+	"fmt"
 )
 
 var DefBox = &Sandbox{map[string]*BoxFunc{
@@ -55,6 +56,22 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 		return m, nil
 	}),
 
+	// get property from object
+	"prop": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
+		if len(args) != 2 {
+			return nil, errors.New("Prop grammer error. eg: [\"Prop\", {\"a\": 1}, \"a\"]")
+		}
+
+		obj, ok1 := args[0].(map[string]interface{})
+		propName, ok2 := args[1].(string)
+
+		if !ok1 || !ok2 {
+			return nil, fmt.Errorf("error types of function prop")
+		} else {
+			return obj[propName], nil
+		}
+	}),
+
 	"error": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
 		l := len(args)
 		if l%2 < 1 {
@@ -100,7 +117,7 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 		v1, ok1 := args[0].(float64)
 		v2, ok2 := args[1].(float64)
 		if !ok1 || !ok2 {
-			return nil, errors.New("args of \"-\" should be float64")
+			return nil, fmt.Errorf("args of \"-\" should be float64, but got v1=%v, v2=%v", v1, v2)
 		} else {
 			return v1 - v2, nil
 		}
@@ -114,7 +131,7 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 		v1, ok1 := args[0].(float64)
 		v2, ok2 := args[1].(float64)
 		if !ok1 || !ok2 {
-			return nil, errors.New("args of \"-\" should be float64")
+			return nil, fmt.Errorf("args of \"/\" should be float64, but got v1=%v, v2=%v", v1, v2)
 		} else {
 			if v2 == 0 {
 				return nil, errors.New("divisor can not be 0")
