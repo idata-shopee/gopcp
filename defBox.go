@@ -67,4 +67,60 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 			return nil, errors.New(msg)
 		}
 	}),
+
+	"+": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
+		var res float64 = 0
+		for _, arg := range args {
+			if val, ok := arg.(float64); !ok {
+				return nil, errors.New("args of \"+\" should be float64")
+			} else {
+				res += val
+			}
+		}
+		return res, nil
+	}),
+
+	"*": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
+		var res float64 = 1
+		for _, arg := range args {
+			if val, ok := arg.(float64); !ok {
+				return nil, errors.New("args of \"+\" should be float64")
+			} else {
+				res *= val
+			}
+		}
+		return res, nil
+	}),
+
+	"-": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
+		if len(args) != 2 {
+			return nil, errors.New("- must have two arguments")
+		}
+
+		v1, ok1 := args[0].(float64)
+		v2, ok2 := args[1].(float64)
+		if !ok1 || !ok2 {
+			return nil, errors.New("args of \"-\" should be float64")
+		} else {
+			return v1 - v2, nil
+		}
+	}),
+
+	"/": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
+		if len(args) != 2 {
+			return nil, errors.New("- must have two arguments")
+		}
+
+		v1, ok1 := args[0].(float64)
+		v2, ok2 := args[1].(float64)
+		if !ok1 || !ok2 {
+			return nil, errors.New("args of \"-\" should be float64")
+		} else {
+			if v2 == 0 {
+				return nil, errors.New("divisor can not be 0")
+			} else {
+				return v1 / v2, nil
+			}
+		}
+	}),
 }}
