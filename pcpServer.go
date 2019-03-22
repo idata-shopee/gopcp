@@ -2,6 +2,7 @@ package gopcp
 
 import (
 	"encoding/json"
+	"sync"
 )
 
 // FunNode function node
@@ -36,26 +37,41 @@ func (pcpServer *PcpServer) ExecuteJsonObj(arr interface{}, attachment interface
 func (p *PcpServer) ExecuteAst(ast interface{}, attachment interface{}) (interface{}, error) {
 	switch funNode := ast.(type) {
 	case FunNode:
-		sandboxFun, err := p.sandbox.Get(funNode.funName)
-		if err != nil {
+		if sandboxFun, err := p.sandbox.Get(funNode.funName); err != nil {
 			return nil, err
-		}
+		} else {
+			if sandboxFun.FunType == SandboxTypeNormal {
+				// for normal mode, resolve params first
+				paramRets := make([]interface{}, len(funNode.params))
+				var wg sync.WaitGroup
 
-		if sandboxFun.FunType == SandboxTypeNormal {
-			// for normal mode, resolve params first
-			var paramRets []interface{}
-			for _, param := range funNode.params {
-				paramRet, paramErr := p.ExecuteAst(param, attachment)
-				if paramErr != nil {
-					return nil, paramErr
+				var err error = nil
+
+				for i, param := range funNode.params {
+					wg.Add(1)
+					go func(i int, param interface{}) {
+						defer wg.Done()
+						paramRet, paramErr := p.ExecuteAst(param, attachment)
+						if paramErr != nil {
+							// error happened, set it
+							err = paramErr
+						} else {
+							paramRets[i] = paramRet
+						}
+					}(i, param)
 				}
-				paramRets = append(paramRets, paramRet)
-			}
 
-			return sandboxFun.Fun(paramRets, attachment, p)
-		} else if sandboxFun.FunType == SandboxTypeLazy {
-			// execute lazy sandbox function
-			return sandboxFun.Fun(funNode.params, attachment, p)
+				wg.Wait()
+
+				if err != nil {
+					return nil, err
+				} else {
+					return sandboxFun.Fun(paramRets, attachment, p)
+				}
+			} else if sandboxFun.FunType == SandboxTypeLazy {
+				// execute lazy sandbox function
+				return sandboxFun.Fun(funNode.params, attachment, p)
+			}
 		}
 	}
 
