@@ -1,12 +1,24 @@
 package gopcp
 
-import "encoding/json"
+import (
+	"bytes"
+	"encoding/json"
+	"strings"
+)
 
 //PcpClient pcp client
 type PcpClient struct{}
 
 type CallResult struct {
 	result interface{}
+}
+
+func JSONMarshal(t interface{}) ([]byte, error) {
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(t)
+	return buffer.Bytes(), err
 }
 
 //Call call function in  pcp server
@@ -30,9 +42,9 @@ func (c *PcpClient) Call(funName string, params ...interface{}) CallResult {
 }
 
 func (c *PcpClient) ToJSON(callResult CallResult) (str string, err error) {
-	bytes, err := json.Marshal(callResult.result)
+	bytes, err := JSONMarshal(callResult.result)
 	if err != nil {
 		return "", err
 	}
-	return string(bytes[:]), nil
+	return strings.Trim(string(bytes[:]), " \n"), nil
 }
