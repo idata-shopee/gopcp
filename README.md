@@ -2,7 +2,7 @@
 
 A simple Lisp-Style protocol for communication (golang version)
 
-![travis-ci build status](https://travis-ci.com/idata-shopee/gopcp.svg?branch=master)
+![travis-ci build status](https://travis-ci.com/lock-free/gopcp.svg?branch=master)
 
 ## Features
 
@@ -16,7 +16,7 @@ A simple Lisp-Style protocol for communication (golang version)
 
 ```go
 import (
-  "github.com/idata-shopee/gopcp"
+  "github.com/lock-free/gopcp"
   "errors"
 )
 
