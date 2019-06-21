@@ -3,6 +3,7 @@ package gopcp
 import (
 	"bytes"
 	"encoding/json"
+	"reflect"
 	"strings"
 )
 
@@ -30,15 +31,25 @@ func (c *PcpClient) Call(funName string, params ...interface{}) CallResult {
 		switch item := param.(type) {
 		case CallResult:
 			args = append(args, item.result)
-		case []interface{}:
-			constParam := append([]interface{}{"'"}, item...)
-			args = append(args, constParam)
 		default:
-			args = append(args, item)
+			if reflect.ValueOf(item).Kind() == reflect.Slice {
+				args = append(args, append([]interface{}{"'"}, getItems(item)...))
+			} else {
+				args = append(args, item)
+			}
 		}
 	}
 
 	return CallResult{append([]interface{}{funName}, args...)}
+}
+
+func getItems(item interface{}) []interface{} {
+	var ans []interface{}
+	items := reflect.ValueOf(item)
+	for i := 0; i < items.Len(); i++ {
+		ans = append(ans, items.Index(i).Interface())
+	}
+	return ans
 }
 
 func (c *PcpClient) ToJSON(callResult CallResult) (str string, err error) {
