@@ -11,7 +11,7 @@ import (
 type PcpClient struct{}
 
 type CallResult struct {
-	result interface{}
+	Result interface{}
 }
 
 func JSONMarshal(t interface{}) ([]byte, error) {
@@ -30,7 +30,7 @@ func (c *PcpClient) Call(funName string, params ...interface{}) CallResult {
 	for _, param := range params {
 		switch item := param.(type) {
 		case CallResult:
-			args = append(args, item.result)
+			args = append(args, item.Result)
 		default:
 			if reflect.ValueOf(item).Kind() == reflect.Slice {
 				args = append(args, append([]interface{}{"'"}, getItems(item)...))
@@ -53,7 +53,7 @@ func getItems(item interface{}) []interface{} {
 }
 
 func (c *PcpClient) ToJSON(callResult CallResult) (str string, err error) {
-	bytes, err := JSONMarshal(callResult.result)
+	bytes, err := JSONMarshal(callResult.Result)
 	if err != nil {
 		return "", err
 	}
