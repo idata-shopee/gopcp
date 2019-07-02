@@ -26,9 +26,8 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 
 		if conditionRet == false || conditionRet == 0.0 || conditionRet == nil {
 			return pcpServer.ExecuteAst(failExp, attachment)
-		} else {
-			return pcpServer.ExecuteAst(successExp, attachment)
 		}
+		return pcpServer.ExecuteAst(successExp, attachment)
 	}),
 
 	// basic data structure: List
@@ -56,7 +55,7 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 		return m, nil
 	}),
 
-	// get property from object
+	// get property from map[string]interface{} structure
 	"prop": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
 		if len(args) != 2 {
 			return nil, errors.New("Prop grammer error. eg: [\"Prop\", {\"a\": 1}, \"a\"]")
@@ -67,9 +66,8 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 
 		if !ok1 || !ok2 {
 			return nil, fmt.Errorf("error types of function prop")
-		} else {
-			return obj[propName], nil
 		}
+		return obj[propName], nil
 	}),
 
 	"error": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
@@ -78,13 +76,14 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 			return nil, errors.New("Must specify error message. eg: [\"error\", \"Exception!\"]")
 		}
 
-		if msg, ok := args[0].(string); !ok {
+		msg, ok := args[0].(string)
+		if !ok {
 			return nil, errors.New("Must specify error message (string). eg: [\"error\", \"Exception!\"]")
-		} else {
-			return nil, errors.New(msg)
 		}
+		return nil, errors.New(msg)
 	}),
 
+	// math operations
 	"+": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
 		var res float64 = 0
 		for _, arg := range args {
@@ -118,9 +117,8 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 		v2, ok2 := args[1].(float64)
 		if !ok1 || !ok2 {
 			return nil, fmt.Errorf("args of \"-\" should be float64, but got v1=%v, v2=%v", v1, v2)
-		} else {
-			return v1 - v2, nil
 		}
+		return v1 - v2, nil
 	}),
 
 	"/": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
@@ -132,12 +130,26 @@ var DefBox = &Sandbox{map[string]*BoxFunc{
 		v2, ok2 := args[1].(float64)
 		if !ok1 || !ok2 {
 			return nil, fmt.Errorf("args of \"/\" should be float64, but got v1=%v, v2=%v", v1, v2)
-		} else {
-			if v2 == 0 {
-				return nil, errors.New("divisor can not be 0")
-			} else {
-				return v1 / v2, nil
-			}
 		}
+		if v2 == 0 {
+			return nil, errors.New("divisor can not be 0")
+		}
+		return v1 / v2, nil
+	}),
+
+	"==": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
+		if len(args) != 2 {
+			return nil, errors.New("== must have two arguments")
+		}
+
+		return args[0] == args[1], nil
+	}),
+
+	"!=": ToSandboxFun(func(args []interface{}, attachment interface{}, pcpServer *PcpServer) (interface{}, error) {
+		if len(args) != 2 {
+			return nil, errors.New("== must have two arguments")
+		}
+
+		return args[0] != args[1], nil
 	}),
 }}

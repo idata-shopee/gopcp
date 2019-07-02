@@ -236,4 +236,26 @@ func TestDivideType(t *testing.T) {
 func TestPropFunction(t *testing.T) {
 	pcpServer := NewPcpServer(simpleSandbox())
 	runPcpCall(t, pcpServer, `["prop", {"a": 1.2}, "a"]`, 1.2)
+	runPcpCallExpectError(t, pcpServer, `["prop", 1, null]`)
+	runPcpCallExpectError(t, pcpServer, `["prop", 1]`)
+}
+
+func TestEqualFunction(t *testing.T) {
+	pcpServer := NewPcpServer(simpleSandbox())
+	runPcpCall(t, pcpServer, `["==", 1, 1]`, true)
+	runPcpCall(t, pcpServer, `["==", 1, 1.0]`, true)
+	runPcpCall(t, pcpServer, `["==", 1, 2]`, false)
+	runPcpCall(t, pcpServer, `["==", "a", "a"]`, true)
+	runPcpCall(t, pcpServer, `["==", "a", "A"]`, false)
+	runPcpCallExpectError(t, pcpServer, `["==", 1]`)
+}
+
+func TestNotEqualFunction(t *testing.T) {
+	pcpServer := NewPcpServer(simpleSandbox())
+	runPcpCall(t, pcpServer, `["!=", 1, 1]`, false)
+	runPcpCall(t, pcpServer, `["!=", 1, 1.0]`, false)
+	runPcpCall(t, pcpServer, `["!=", 1, 2]`, true)
+	runPcpCall(t, pcpServer, `["!=", "a", "a"]`, false)
+	runPcpCall(t, pcpServer, `["!=", "a", "A"]`, true)
+	runPcpCallExpectError(t, pcpServer, `["!=", 1]`)
 }
