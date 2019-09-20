@@ -30,8 +30,7 @@ func (pcpServer *PcpServer) Execute(source string, attachment interface{}) (inte
 
 // @param arr. Pure Json Object.
 func (pcpServer *PcpServer) ExecuteJsonObj(arr interface{}, attachment interface{}) (interface{}, error) {
-	ast := parseAst(arr)
-	return pcpServer.ExecuteAst(ast, attachment)
+	return pcpServer.ExecuteAst(ParseJsonObjectToAst(arr), attachment)
 }
 
 func (p *PcpServer) ExecuteAst(ast interface{}, attachment interface{}) (interface{}, error) {
@@ -47,6 +46,7 @@ func (p *PcpServer) ExecuteAst(ast interface{}, attachment interface{}) (interfa
 
 				var err error = nil
 
+				// resolve params in concurrent way
 				for i, param := range funNode.params {
 					wg.Add(1)
 					go func(i int, param interface{}) {
@@ -78,7 +78,8 @@ func (p *PcpServer) ExecuteAst(ast interface{}, attachment interface{}) (interfa
 	return ast, nil
 }
 
-func parseAst(source interface{}) interface{} {
+// convert source object to ast
+func ParseJsonObjectToAst(source interface{}) interface{} {
 	switch arr := source.(type) {
 	case []interface{}:
 		if len(arr) == 0 {
@@ -87,13 +88,13 @@ func parseAst(source interface{}) interface{} {
 
 		switch head := arr[0].(type) {
 		case string:
-			if head == "'" {
+			if head == "'" { // escape parsing array
 				return arr[1:]
 			} else {
 				var params []interface{}
 
 				for i := 1; i < len(arr); i++ {
-					params = append(params, parseAst(arr[i]))
+					params = append(params, ParseJsonObjectToAst(arr[i]))
 				}
 
 				return FunNode{head, params}
@@ -103,6 +104,25 @@ func parseAst(source interface{}) interface{} {
 		}
 	default:
 		return arr
+	}
+}
+
+// convert ast to source object
+func ParseAstToJsonObject(ast interface{}) interface{} {
+	switch funNode := ast.(type) {
+
+	case FunNode:
+		list := []interface{}{funNode.funName}
+		for _, param := range funNode.params {
+			list = append(list, ParseAstToJsonObject(param))
+		}
+		return list
+
+	case []interface{}:
+		return append([]interface{}{"'"}, funNode...)
+
+	default:
+		return funNode
 	}
 }
 

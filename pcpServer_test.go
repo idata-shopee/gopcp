@@ -259,3 +259,32 @@ func TestNotEqualFunction(t *testing.T) {
 	runPcpCall(t, pcpServer, `["!=", "a", "A"]`, true)
 	runPcpCallExpectError(t, pcpServer, `["!=", 1]`)
 }
+
+func runParseAstJson(t *testing.T, source string) {
+	var arr interface{}
+	err := json.Unmarshal([]byte(source), &arr)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	ast := ParseJsonObjectToAst(arr)
+
+	bs, err := json.Marshal(ParseAstToJsonObject(ast))
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	assertEqual(t, string(bs), source, "")
+}
+
+func TestParseAstToJsonObject(t *testing.T) {
+	runParseAstJson(t, "1")
+	runParseAstJson(t, `"hello"`)
+	runParseAstJson(t, `true`)
+	runParseAstJson(t, `null`)
+	runParseAstJson(t, `{}`)
+	runParseAstJson(t, `["'",1,2,3]`) // [1,2,3] <=> [',1,2,3]
+	runParseAstJson(t, `["if",true,["get",3]]`)
+	runParseAstJson(t, `["'",true,["'",3]]`)
+	runParseAstJson(t, `["if",true,["'","ok"]]`)
+	runParseAstJson(t, `{"a":[1,2,3]}`)
+}
